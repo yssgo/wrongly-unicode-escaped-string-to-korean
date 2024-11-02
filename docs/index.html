@@ -1,0 +1,96 @@
+<!doctype html5>
+<html lang="ko">
+<head>
+<meta charet='utf-8'>
+<title>잘못된 uniced-escaped 유니코드 문자열을 한글로</title>
+</head>
+<body>
+<button onclick='decode()'>click</button></p>
+<p>잘못된 unicode-escaped 유니코드 문자열:<br><textarea rows=5 cols=50 id='BadETA'></textarea></p>
+<p>바로고친 unicode-escaped 유니코드 문자열:<br><textarea rows=5 cols=50 id='GoodETA'></textarea></p>
+<p>한글:<br><textarea rows=5 cols=50 id='DTA' readonly></textarea></p>
+</body>
+</html>
+<script>
+'use strict';
+window.onload = function(){
+  let BadETA = document.getElementById('BadETA');
+  BadETA.value = String.raw`Wuc544₩uc544₩uc544₩uc
+545₩u0021₩u0021₩u0020
+Wuc800₩ub9ac₩u0020₩ua
+c00₩u0021₩u0021₩u0020
+Wuc800₩ub9ac₩u002e₩u0
+02e₩u002e
+Wuc544\uc544\uc544\uc545Wu0021Wu 0 021Wu0020\uc800\ub9ac\u0020Wuac0 0 Wu0021Wu0021Wu0020\uc800Wub9ac`;
+}
+function decode(){
+  let BadETA = document.getElementById('BadETA');
+  let GoodETA = document.getElementById('GoodETA');
+  let DTA = document.getElementById('DTA');
+  
+  let BadES = BadETA.value;
+  let GoodES = BadES;  
+  let good_esa = BadES.split(/\r?\n/)  
+  for(let i=0; i < good_esa.length; i++){
+    good_esa[i] = good_esa[i].replace(/[ \t\v\f]/g,'')
+    good_esa[i] = good_esa[i].replace(/[W￦₩]u/g,'\\u')
+  }
+  for(let i=0; i < good_esa.length; i++){
+    if (i+1 <good_esa.length){
+      for (let k=1;k<=3;k++){
+        if (good_esa[i].match(RegExp("\\u[A-Fa-f0-9]{"+k+"}$"))
+          && good_esa[i+1].match(RegExp("^[A-Fa-f0-9]{"+(4-k)+"}"))){
+          good_esa[i] += good_esa[i+1].slice(0,(4-k))
+          good_esa[i+1] = good_esa[i+1].slice(4-k)
+        }
+      }
+    }
+    good_esa[i] = good_esa[i].replace(/[W￦₩]u/g,'\\u')
+  }
+  let BadES_EOL = '';
+  let EOL_TYPE=''
+  if(BadES.indexOf("\r\n")>=0){
+    BadES_EOL = '\r\n';    EOL_TYPE='WIN';
+  }
+  else if(BadES.indexOf('\r')>=0){
+    BadES_EOL = '\r';    EOL_TYPE='OLDMAC';
+  }
+  else if(BadES.indexOf('\n')>=0){
+    BadES_EOL = '\n';    EOL_TYPE='UNIX';
+  }
+  else {
+    BadES_EOL = '';   EOL_TYPE='NONE'; 
+  }
+  console.log('BadES_EOL:',BadES_EOL,EOL_TYPE)
+  GoodETA.value = good_esa.join(BadES_EOL)
+  
+  let good_dsa = [];
+  for(let gei=0; gei < good_esa.length; gei++){
+  
+    let ds = '';
+    
+    for (let i = 0; i < good_esa[gei].length; i++) {
+      let iCP=1;
+      let iH;
+      if (iCP) if(!(i + 5 <= good_esa[gei].length - 1)) iCP=0;    
+      if (iCP) if(!(good_esa[gei][i]=='\\' && good_esa[gei][i+1]=='u')) iCP=0;
+      iH = 1;
+      for(let j=i+2;iH && j<=i+5;j++)
+         if (!('0'<=good_esa[gei][j]<='9' || 'A'<=good_esa[gei][j]<='F' || 'a'<=good_esa[gei][j]<='f'))
+            iH=0;
+      if(iCP) if(!iH) iCP = 0;
+      if(!iCP)
+        ds += good_esa[gei][i]
+      else {
+        const CP = parseInt(good_esa[gei].slice(i + 2, i + 6), 16);
+        const LTR = String.fromCharCode(CP);
+        ds += LTR;      
+        i += 5;
+      }      
+    }
+    good_dsa.push(ds)
+    
+  }  
+  DTA.value = good_dsa.join(BadES_EOL);  
+}
+</script>
