@@ -5,7 +5,7 @@
 <title>잘못된 uniced-escaped 유니코드 문자열을 한글로</title>
 </head>
 <body>
-<button onclick='decode()'>click</button></p>
+<button onclick='decode()'>변환</button></p>
 <p>잘못된 unicode-escaped 유니코드 문자열:<br><textarea rows=10 cols=100 id='BadETA'></textarea></p>
 <p>바로고친 unicode-escaped 유니코드 문자열:<br><textarea rows=10 cols=100 id='GoodETA'></textarea></p>
 <p>한글:<br><textarea rows=10 cols=100 id='DTA' readonly></textarea></p>
@@ -22,6 +22,7 @@ c00₩u0021₩u0021₩u0020
 Wuc800₩ub9ac₩u002e₩u0
 02e₩u002e
 Wuc544\uc544\uc544\uc545Wu0021Wu 0 021Wu0020\uc800\ub9ac\u0020Wuac0 0 Wu0021Wu0021Wu0020\uc800Wub9ac`;
+  decode();
 }
 function decode(){
   let BadETA = document.getElementById('BadETA');
